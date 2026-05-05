@@ -15,11 +15,11 @@ public class FanfaronDAO {
         this.dbConnectionManager = dbManager;
     }
     
-    public Fanfaron findById(int id){
+    public Fanfaron findByNomFanfaron(String nom_fanfaron){
         String query = "SELECT * FROM fanfaron WHERE nom_fanfaron = ?";
         try (Connection con = dbConnectionManager.getConnection();
          PreparedStatement ps = con.prepareStatement(query)) {
-            ps.setInt(1, id);
+            ps.setString(1, nom_fanfaron);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
                 return new Fanfaron(
@@ -59,8 +59,6 @@ public class FanfaronDAO {
             ps.setTimestamp(10, fanfaron.getDerniereConnexion());
         
             ps.executeUpdate();
-            
-
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -70,5 +68,34 @@ public class FanfaronDAO {
     }
 
 
+    public Fanfaron verifIdentif(String nom_fanfaron, String mdp){
+
+        String query = "SELECT * FROM fanfaron WHERE nom_fanfaron = ? AND mot_de_passe = digest(?, 'sha256')";
+        try (Connection con = dbConnectionManager.getConnection();
+         PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, nom_fanfaron);
+            ps.setString(2, mdp);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                return new Fanfaron(
+                        rs.getString("nom_fanfaron"),
+                        rs.getString("email"),
+                        rs.getString("mot_de_passe"),
+                        rs.getString("prenom"),
+                        rs.getString("nom"),
+                        rs.getString("genre"),
+                        rs.getString("contraintes_alimentaires"),
+                        rs.getString("role"),
+                        rs.getTimestamp("date_creation"),
+                        rs.getTimestamp("derniere_connexion")
+                );
+            } 
+        } catch (SQLException e) {
+        e.printStackTrace(); 
+        }
+        
+        return null;
+
+    }
     
 }

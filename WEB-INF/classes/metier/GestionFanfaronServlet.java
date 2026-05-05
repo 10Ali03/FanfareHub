@@ -25,10 +25,28 @@ public class GestionFanfaronServlet extends HttpServlet {
   protected void service(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     String action = req.getParameter("action");
     String vue = "menu.jsp";
+    HttpSession session = req.getSession(true);
 
     try {
       switch (action) {
         case "connexion": {
+          String nomFanfaron = req.getParameter("nom_fanfaron");
+          String mdp = req.getParameter("mdp");
+
+          Fanfaron f = daoFanfaron.verifIdentif(nomFanfaron, mdp);
+          System.out.println("LOGIN = " + nomFanfaron);
+System.out.println("MDP = " + mdp);
+System.out.println("RESULT DAO = " + f);
+          if (f != null) {
+            session.setAttribute("login",nomFanfaron);
+            session.setAttribute("role",f.getRole());
+            vue = "menu.jsp";
+          } else {
+            req.setAttribute("nomFanfaron", nomFanfaron);
+            req.setAttribute("mdp", mdp);
+            vue = "inscription.jsp";
+          }
+            
           break;
         }
 
@@ -52,12 +70,11 @@ public class GestionFanfaronServlet extends HttpServlet {
           try {
             Fanfaron fanfaron = new Fanfaron(nomFanfaron, email, mdp, prenom, nom, genre, contraintesAlim, "utilisateur", now, now);
             boolean success = daoFanfaron.create(fanfaron);
-            HttpSession session = req.getSession(true);
             if (success) {
               session.setAttribute("login",nomFanfaron);
+              session.setAttribute("role","utilisateur");
             }
             vue = "menu.jsp";
-            req.setAttribute("fanfaron", fanfaron);
           } catch (Exception e) {
             res.sendError(400, "Format de date incorrect");
             return;
