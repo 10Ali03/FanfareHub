@@ -10,6 +10,11 @@ DROP TABLE IF EXISTS pupitre CASCADE;
 DROP TABLE IF EXISTS fanfaron CASCADE;
 
 -- =========================
+-- EXTENSION POUR HASH SHA-256
+-- =========================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =========================
 -- TABLES DE REFERENCE
 -- =========================
 CREATE TABLE pupitre (
@@ -29,7 +34,7 @@ CREATE TABLE fanfaron (
     id SERIAL PRIMARY KEY,
     nom_fanfaron VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
-    mot_de_passe VARCHAR(255) NOT NULL,
+    mot_de_passe BYTEA NOT NULL,
     prenom VARCHAR(50) NOT NULL,
     nom VARCHAR(50) NOT NULL,
     genre VARCHAR(10) CHECK (genre IN ('homme', 'femme', 'autre')),
@@ -76,7 +81,6 @@ CREATE TABLE impliquer (
 
 -- =========================
 -- EVENEMENT
--- Un événement est proposé par exactement un fanfaron
 -- =========================
 CREATE TABLE evenement (
     id SERIAL PRIMARY KEY,

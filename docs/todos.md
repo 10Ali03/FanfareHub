@@ -14,65 +14,30 @@ Le projet suit l’architecture **MVC + DAO** :
 ## 📁 Structure complète du projet 
 ```text
 FanfareHub/
-│
+├── docs/
 ├── META-INF/
-│   └── context.xml
-│
 ├── WEB-INF/
 │   ├── classes/
-│   │   ├── dao/
-│   │   │   ├── ConnexionBD.java
-│   │   │   ├── FanfaronDAO.java
-│   │   │   ├── PupitreDAO.java
-│   │   │   ├── GroupeDAO.java
-│   │   │   ├── EvenementDAO.java
-│   │   │   ├── ParticipationDAO.java
-│   │   │   ├── AppartenirDAO.java
-│   │   │   ├── ImpliquerDAO.java
-│   │   │   └── ProposerDAO.java
+│   │   ├── controleur/
+│   │   │   ├── InscriptionServlet.java
+│   │   │   ├── ConnexionServlet.java
+│   │   │   └── DeconnexionServlet.java
 │   │   │
-│   │   ├── metier/
-│   │   │   ├── Fanfaron.java
-│   │   │   ├── Pupitre.java
-│   │   │   ├── Groupe.java
-│   │   │   ├── Evenement.java
-│   │   │   └── Participation.java
-│   │   │
-│   │   └── servlet/
-│   │       ├── InscriptionServlet.java
-│   │       ├── ConnexionServlet.java
-│   │       ├── DeconnexionServlet.java
-│   │       ├── ProfilServlet.java
-│   │       ├── ChoixGroupesPupitresServlet.java
-│   │       ├── EvenementServlet.java
-│   │       ├── ParticipationServlet.java
-│   │       ├── AdminUtilisateurServlet.java
-│   │       └── GestionEvenementServlet.java
+│   │   └── dao/
+│   │       ├── ConnexionBD.java
+│   │       ├── Fanfaron.java
+│   │       ├── FanfaronDAO.java
+│   │       ├── FanfaronJDBCDAO.java
+│   │       └── DAOFactory.java
 │   │
 │   └── lib/
 │       └── postgresql-42.7.4.jar
 │
-├── index.jsp
-├── inscription.jsp
-├── connexion.jsp
-├── accueil.jsp
-├── profil.jsp
-├── choixGroupesPupitres.jsp
-├── listeEvenements.jsp
-├── detailEvenement.jsp
-├── adminUtilisateurs.jsp
-├── formulaireUtilisateur.jsp
-├── gestionEvenements.jsp
-├── formulaireEvenement.jsp
-├── erreur.jsp
-│
-└── docs/
-    ├── creation_fanfarehub.sql
-    ├── mld.txt
-    └── architecture.md
-```
-
----
+└── vue/
+    ├── index.jsp
+    ├── inscription.jsp
+    ├── connexion.jsp
+    └── accueil.jsp
 
 ## 🧩 Rôle de chaque couche
 
