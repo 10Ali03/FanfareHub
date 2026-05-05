@@ -34,9 +34,7 @@ public class GestionFanfaronServlet extends HttpServlet {
           String mdp = req.getParameter("mdp");
 
           Fanfaron f = daoFanfaron.verifIdentif(nomFanfaron, mdp);
-          System.out.println("LOGIN = " + nomFanfaron);
-System.out.println("MDP = " + mdp);
-System.out.println("RESULT DAO = " + f);
+          
           if (f != null) {
             session.setAttribute("login",nomFanfaron);
             session.setAttribute("role",f.getRole());
@@ -73,10 +71,14 @@ System.out.println("RESULT DAO = " + f);
             if (success) {
               session.setAttribute("login",nomFanfaron);
               session.setAttribute("role","utilisateur");
+              vue = "menu.jsp";
             }
-            vue = "menu.jsp";
+            else {
+              vue = "inscription.jsp";
+            }
+            
           } catch (Exception e) {
-            res.sendError(400, "Format de date incorrect");
+            e.printStackTrace();
             return;
           }
 
