@@ -2,6 +2,7 @@
 -- RESET
 -- =========================
 DROP TABLE IF EXISTS participer CASCADE;
+DROP TABLE IF EXISTS proposer CASCADE;
 DROP TABLE IF EXISTS impliquer CASCADE;
 DROP TABLE IF EXISTS appartenir CASCADE;
 DROP TABLE IF EXISTS evenement CASCADE;
@@ -29,7 +30,7 @@ CREATE TABLE fanfaron (
     id SERIAL PRIMARY KEY,
     nom_fanfaron VARCHAR(50) NOT NULL UNIQUE,
     email VARCHAR(100) NOT NULL UNIQUE,
-    mot_de_passe VARCHAR(255) NOT NULL,
+    mot_de_passe BYTEA NOT NULL,
     prenom VARCHAR(50) NOT NULL,
     nom VARCHAR(50) NOT NULL,
     genre VARCHAR(10) CHECK (genre IN ('homme', 'femme', 'autre')),
@@ -76,7 +77,6 @@ CREATE TABLE impliquer (
 
 -- =========================
 -- EVENEMENT
--- Un événement est proposé par exactement un fanfaron
 -- =========================
 CREATE TABLE evenement (
     id SERIAL PRIMARY KEY,
@@ -84,16 +84,27 @@ CREATE TABLE evenement (
     horodatage TIMESTAMP NOT NULL,
     duree INTEGER NOT NULL CHECK (duree > 0),
     lieu VARCHAR(150) NOT NULL,
-    description TEXT,
+    description TEXT
+);
+
+-- =========================
+-- ASSOCIATION PROPOSER (1,1 côté événement)
+-- =========================
+CREATE TABLE proposer (
+    id_evenement INTEGER PRIMARY KEY,
     id_fanfaron INTEGER NOT NULL,
-    CONSTRAINT fk_evenement_fanfaron
+    CONSTRAINT fk_prop_evenement
+        FOREIGN KEY (id_evenement)
+        REFERENCES evenement(id)
+        ON DELETE CASCADE,
+    CONSTRAINT fk_prop_fanfaron
         FOREIGN KEY (id_fanfaron)
         REFERENCES fanfaron(id)
         ON DELETE CASCADE
 );
 
 -- =========================
--- ASSOCIATION PARTICIPER
+-- ASSOCIATION PARTICIPER (ternaire)
 -- =========================
 CREATE TABLE participer (
     id_fanfaron INTEGER NOT NULL,
@@ -127,12 +138,10 @@ INSERT INTO pupitre (nom) VALUES
 ('basse'),
 ('trompette'),
 ('saxophone baryton'),
-('trombone')
-ON CONFLICT (nom) DO NOTHING;
+('trombone');
 
 INSERT INTO groupe (nom) VALUES
 ('commission prestation'),
 ('commission artistique'),
 ('commission logistique'),
-('commission communication interne')
-ON CONFLICT (nom) DO NOTHING;
+('commission communication interne');
