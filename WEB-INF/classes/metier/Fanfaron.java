@@ -1,4 +1,4 @@
-package dao;
+package metier;
 import java.sql.Timestamp;
 
 public class Fanfaron {

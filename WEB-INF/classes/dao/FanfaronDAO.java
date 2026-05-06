@@ -5,6 +5,8 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import metier.Fanfaron;
+
 public class FanfaronDAO {
     private final DbConnectionManager dbConnectionManager;
 
@@ -93,6 +95,94 @@ public class FanfaronDAO {
         
         return null;
 
+    }
+
+    public int findIdByNomFanfaron(String nomFanfaron) throws SQLException {
+        String sql = "SELECT id FROM fanfaron WHERE nom_fanfaron = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nomFanfaron);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getInt("id");
+            }
+        }
+        return -1;
+    }
+
+    public java.util.List<Integer> findPupitreIdsByFanfaron(int idFanfaron) throws SQLException {
+        String sql = "SELECT id_instrument FROM appartenir WHERE id_fanfaron = ?";
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idFanfaron);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) ids.add(rs.getInt(1));
+            }
+        }
+        return ids;
+    }
+
+    public java.util.List<Integer> findGroupeIdsByFanfaron(int idFanfaron) throws SQLException {
+        String sql = "SELECT id_groupe FROM impliquer WHERE id_fanfaron = ?";
+        java.util.List<Integer> ids = new java.util.ArrayList<>();
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setInt(1, idFanfaron);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) ids.add(rs.getInt(1));
+            }
+        }
+        return ids;
+    }
+
+    public void saveChoix(int idFanfaron, String[] pupitres, String[] groupes) throws SQLException {
+        String delApp = "DELETE FROM appartenir WHERE id_fanfaron = ?";
+        String delImp = "DELETE FROM impliquer WHERE id_fanfaron = ?";
+        String insApp = "INSERT INTO appartenir(id_fanfaron, id_instrument) VALUES (?, ?)";
+        String insImp = "INSERT INTO impliquer(id_fanfaron, id_groupe) VALUES (?, ?)";
+
+        try (Connection con = dbConnectionManager.getConnection()) {
+            con.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = con.prepareStatement(delApp)) {
+                    ps.setInt(1, idFanfaron);
+                    ps.executeUpdate();
+                }
+                try (PreparedStatement ps = con.prepareStatement(delImp)) {
+                    ps.setInt(1, idFanfaron);
+                    ps.executeUpdate();
+                }
+
+                if (pupitres != null) {
+                    try (PreparedStatement ps = con.prepareStatement(insApp)) {
+                        for (String p : pupitres) {
+                            ps.setInt(1, idFanfaron);
+                            ps.setInt(2, Integer.parseInt(p));
+                            ps.addBatch();
+                        }
+                        ps.executeBatch();
+                    }
+                }
+
+                if (groupes != null) {
+                    try (PreparedStatement ps = con.prepareStatement(insImp)) {
+                        for (String g : groupes) {
+                            ps.setInt(1, idFanfaron);
+                            ps.setInt(2, Integer.parseInt(g));
+                            ps.addBatch();
+                        }
+                        ps.executeBatch();
+                    }
+                }
+
+                con.commit();
+            } catch (Exception e) {
+                con.rollback();
+                throw e;
+            } finally {
+                con.setAutoCommit(true);
+            }
+        }
     }
     
 }

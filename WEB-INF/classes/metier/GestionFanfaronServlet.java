@@ -5,20 +5,21 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.*;
 
 import java.io.IOException;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 
 import dao.*;
-
-import java.util.Date;
 
 @WebServlet("/GestionFanfaron")
 public class GestionFanfaronServlet extends HttpServlet {
   private FanfaronDAO daoFanfaron;
+  private PupitreDAO pupitreDAO;
+  private GroupeDAO groupeDAO;
+
   @Override
   public void init() {
     DbConnectionManager dbManager = DbConnectionManager.getInstance();
     daoFanfaron = new FanfaronDAO(dbManager);
+    pupitreDAO = new PupitreDAO(dbManager);
+    groupeDAO = new GroupeDAO(dbManager);
   }
 
   @Override
@@ -37,20 +38,18 @@ public class GestionFanfaronServlet extends HttpServlet {
           Fanfaron f = daoFanfaron.verifIdentif(nomFanfaron, mdp);
           System.out.print(f);
           if (f != null) {
-            session.setAttribute("login",nomFanfaron);
-            session.setAttribute("role",f.getRole());
+            session.setAttribute("login", nomFanfaron);
+            session.setAttribute("role", f.getRole());
             vue = "menu.jsp";
           } else {
             req.setAttribute("nomFanfaron", nomFanfaron);
             req.setAttribute("mdp", mdp);
             vue = "inscription.jsp";
           }
-            
           break;
         }
 
         case "inscription": {
-          
           String nomFanfaron = req.getParameter("nomFanfaron");
           String email = req.getParameter("email");
           String mdp = req.getParameter("mdp");
@@ -65,10 +64,10 @@ public class GestionFanfaronServlet extends HttpServlet {
             req.setAttribute("message", "Les mots de passe ne sont pas les mêmes !");
             break;
           }
-          
+
           java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
 
-          if (nomFanfaron == null || email == null || mdp == null || prenom == null || nom == null || genre == null || contraintesAlim == null ) {
+          if (nomFanfaron == null || email == null || mdp == null || prenom == null || nom == null || genre == null || contraintesAlim == null) {
             res.sendError(400, "Paramètres manquants pour l'action créer");
             return;
           }
@@ -77,15 +76,14 @@ public class GestionFanfaronServlet extends HttpServlet {
             Fanfaron fanfaron = new Fanfaron(nomFanfaron, email, mdp, prenom, nom, genre, contraintesAlim, "utilisateur", now, now);
             boolean success = daoFanfaron.create(fanfaron);
             if (success) {
-              session.setAttribute("login",nomFanfaron);
-              session.setAttribute("role","utilisateur");
+              session.setAttribute("login", nomFanfaron);
+              session.setAttribute("role", "utilisateur");
               vue = "menu.jsp";
-            }
-            else {
+            } else {
               vue = "inscription.jsp";
               req.setAttribute("message", "Erreur lors de l'ajout du fanfaron !");
             }
-            
+
           } catch (Exception e) {
             e.printStackTrace();
             return;
@@ -93,15 +91,58 @@ public class GestionFanfaronServlet extends HttpServlet {
 
           break;
         }
+
+        case "choixGroupesPupitres": {
+          String login = (String) session.getAttribute("login");
+          if (login == null) {
+            res.sendRedirect("connexion.jsp");
+            return;
+          }
+
+          int idFanfaron = daoFanfaron.findIdByNomFanfaron(login);
+
+          req.setAttribute("pupitres", pupitreDAO.findAll());
+          req.setAttribute("groupes", groupeDAO.findAll());
+          req.setAttribute("selectedPupitres", daoFanfaron.findPupitreIdsByFanfaron(idFanfaron));
+          req.setAttribute("selectedGroupes", daoFanfaron.findGroupeIdsByFanfaron(idFanfaron));
+          vue = "groupesPupitres.jsp";
+          break;
+        }
+
+        case "saveChoixGroupesPupitres": {
+          String login = (String) session.getAttribute("login");
+          if (login == null) {
+            res.sendRedirect("connexion.jsp");
+            return;
+          }
+
+          int idFanfaron = daoFanfaron.findIdByNomFanfaron(login);
+          String[] pupitres = req.getParameterValues("pupitres");
+          String[] groupes = req.getParameterValues("groupes");
+
+          daoFanfaron.saveChoix(idFanfaron, pupitres, groupes);
+
+          req.setAttribute("pupitres", pupitreDAO.findAll());
+          req.setAttribute("groupes", groupeDAO.findAll());
+          req.setAttribute("selectedPupitres", daoFanfaron.findPupitreIdsByFanfaron(idFanfaron));
+          req.setAttribute("selectedGroupes", daoFanfaron.findGroupeIdsByFanfaron(idFanfaron));
+          req.setAttribute("message", "Choix enregistrés.");
+          vue = "groupesPupitres.jsp";
+          break;
+        }
+
         case "addUser": {
           break;
         }
+
         case "updateUser": {
           break;
         }
-        case "modifierUser" :{
-            break;
+
+        case "modifierUser": {
+          break;
         }
+
         default:
           res.sendError(404, "Action non supportée");
           return;
@@ -111,6 +152,7 @@ public class GestionFanfaronServlet extends HttpServlet {
       res.sendError(500, "Erreur serveur : " + e.getMessage());
       return;
     }
+
     req.getRequestDispatcher(vue).forward(req, res);
   }
 }
