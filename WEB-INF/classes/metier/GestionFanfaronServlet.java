@@ -32,9 +32,10 @@ public class GestionFanfaronServlet extends HttpServlet {
         case "connexion": {
           String nomFanfaron = req.getParameter("nomFanfaron");
           String mdp = req.getParameter("mdp");
+          System.out.print("fanfaron" + nomFanfaron + mdp);
 
           Fanfaron f = daoFanfaron.verifIdentif(nomFanfaron, mdp);
-          
+          System.out.print(f);
           if (f != null) {
             session.setAttribute("login",nomFanfaron);
             session.setAttribute("role",f.getRole());
