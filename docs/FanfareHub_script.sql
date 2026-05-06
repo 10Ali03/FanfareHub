@@ -11,6 +11,11 @@ DROP TABLE IF EXISTS pupitre CASCADE;
 DROP TABLE IF EXISTS fanfaron CASCADE;
 
 -- =========================
+-- EXTENSION POUR HASH SHA-256
+-- =========================
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
+-- =========================
 -- TABLES DE REFERENCE
 -- =========================
 CREATE TABLE pupitre (
