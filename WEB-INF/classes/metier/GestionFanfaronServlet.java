@@ -30,7 +30,7 @@ public class GestionFanfaronServlet extends HttpServlet {
     try {
       switch (action) {
         case "connexion": {
-          String nomFanfaron = req.getParameter("nom_fanfaron");
+          String nomFanfaron = req.getParameter("nomFanfaron");
           String mdp = req.getParameter("mdp");
 
           Fanfaron f = daoFanfaron.verifIdentif(nomFanfaron, mdp);
@@ -50,13 +50,20 @@ public class GestionFanfaronServlet extends HttpServlet {
 
         case "inscription": {
           
-          String nomFanfaron = req.getParameter("nom_fanfaron");
+          String nomFanfaron = req.getParameter("nomFanfaron");
           String email = req.getParameter("email");
           String mdp = req.getParameter("mdp");
+          String mdpConfirm = req.getParameter("mdpConfirm");
           String prenom = req.getParameter("prenom");
           String nom = req.getParameter("nom");
           String genre = req.getParameter("genre");
-          String contraintesAlim = req.getParameter("contraintes_alimentaires");
+          String contraintesAlim = req.getParameter("contraintesAlim");
+
+          if (mdp == null || mdpConfirm == null || !mdp.equals(mdpConfirm)) {
+            vue = "inscription.jsp";
+            req.setAttribute("message", "Les mots de passe ne sont pas les mêmes !");
+            break;
+          }
           
           java.sql.Timestamp now = new java.sql.Timestamp(System.currentTimeMillis());
 
@@ -75,6 +82,7 @@ public class GestionFanfaronServlet extends HttpServlet {
             }
             else {
               vue = "inscription.jsp";
+              req.setAttribute("message", "Erreur lors de l'ajout du fanfaron !");
             }
             
           } catch (Exception e) {

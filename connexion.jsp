@@ -1,3 +1,5 @@
+<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -9,7 +11,7 @@
     <h1>Se connecter</h1>
     <form method="get" action="GestionFanfaron">
         <input type='hidden' name='action' value='connexion'>
-        Nom fanfaron : <input type="text" name="nom_fanfaron" required><br><br>
+        Nom fanfaron : <input type="text" name="nomFanfaron" required><br><br>
         mot de passe : <input type="text" name="mdp" required><br><br>
         <input type="submit" value="Valider">
     </form>
