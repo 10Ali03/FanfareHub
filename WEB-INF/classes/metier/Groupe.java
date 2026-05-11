@@ -9,11 +9,6 @@ public class Groupe {
         this.nom = nom;
     }
 
-    public int getId() {
-        return id;
-    }
-
-    public String getNom() {
-        return nom;
-    }
+    public int getId() { return id; }
+    public String getNom() { return nom; }
 }
