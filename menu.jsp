@@ -12,11 +12,13 @@
     String login = (String)session.getAttribute( "login" );
     String role = (String)session.getAttribute( "role" );
     if (login == null){
-        response.sendRedirect("login.html");
+        response.sendRedirect("connexion.jsp");
         return;
     } 
     if ("admin".equals(role)) { %>
-        <a href="GestionFanfaron/action='pageAdmin'"> Voir les fanfarons</a>
+        <p><a href="Admin">Administration des fanfarons</a></p>
     <% } %>
+    <p><a href="Choix?action=choixGroupesPupitres">Gerer mes groupes et pupitres</a></p>
+    <p><a href="Auth?action=logout">Se deconnecter</a></p>
 </body>
 </html>

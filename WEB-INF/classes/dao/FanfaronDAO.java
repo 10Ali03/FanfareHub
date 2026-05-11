@@ -184,5 +184,57 @@ public class FanfaronDAO {
             }
         }
     }
+
+    public java.util.List<Fanfaron> findAllFanfarons() throws SQLException {
+        String query = "SELECT * FROM fanfaron ORDER BY nom_fanfaron";
+        java.util.List<Fanfaron> fanfarons = new java.util.ArrayList<>();
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(query);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                fanfarons.add(new Fanfaron(
+                        rs.getString("nom_fanfaron"),
+                        rs.getString("email"),
+                        rs.getString("mot_de_passe"),
+                        rs.getString("prenom"),
+                        rs.getString("nom"),
+                        rs.getString("genre"),
+                        rs.getString("contraintes_alimentaires"),
+                        rs.getString("role"),
+                        rs.getTimestamp("date_creation"),
+                        rs.getTimestamp("derniere_connexion")
+                ));
+            }
+        }
+        return fanfarons;
+    }
+
+    public boolean deleteByNomFanfaron(String nomFanfaron) throws SQLException {
+        String query = "DELETE FROM fanfaron WHERE nom_fanfaron = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, nomFanfaron);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
+    public boolean updateByNomFanfaron(String ancienNomFanfaron, Fanfaron fanfaron, String newMdpOrNull) throws SQLException {
+        String query = "UPDATE fanfaron SET nom_fanfaron = ?, email = ?, mot_de_passe = CASE WHEN ? IS NULL OR ? = '' THEN mot_de_passe ELSE digest(?, 'sha256') END, prenom = ?, nom = ?, genre = ?, contraintes_alimentaires = ?, role = ? WHERE nom_fanfaron = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(query)) {
+            ps.setString(1, fanfaron.getNomFanfaron());
+            ps.setString(2, fanfaron.getEmail());
+            ps.setString(3, newMdpOrNull);
+            ps.setString(4, newMdpOrNull);
+            ps.setString(5, newMdpOrNull);
+            ps.setString(6, fanfaron.getPrenom());
+            ps.setString(7, fanfaron.getNom());
+            ps.setString(8, fanfaron.getGenre());
+            ps.setString(9, fanfaron.getContraintesAlim());
+            ps.setString(10, fanfaron.getRole());
+            ps.setString(11, ancienNomFanfaron);
+            return ps.executeUpdate() > 0;
+        }
+    }
     
 }

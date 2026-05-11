@@ -9,12 +9,12 @@
 <body>
     <p><%= request.getAttribute("message") != null ? request.getAttribute("message") : " "%> </p>
     <h1>S'inscrire</h1>
-    <form method="get" action="GestionFanfaron">
+    <form method="post" action="Auth">
         <input type='hidden' name='action' value='inscription'>
         Nom fanfaron : <input type="text" name="nomFanfaron" value='<%= request.getParameter("nomFanfaron") != null ? request.getParameter("nomFanfaron") : "" %>' required><br><br>
         email : <input type="email" name="email" required><br><br>
-        mot de passe : <input type="text" name="mdp" value='<%= request.getParameter("mdp") != null ? request.getParameter("mdp") : "" %>' required><br><br>
-        confirmez votre mot de passe : <input type="text" name="mdpConfirm" required><br><br>
+        mot de passe : <input type="password" name="mdp" required><br><br>
+        confirmez votre mot de passe : <input type="password" name="mdpConfirm" required><br><br>
         prenom : <input type="text" name="prenom" required><br><br>
         nom : <input type="text" name="nom" required><br><br>
         genre :

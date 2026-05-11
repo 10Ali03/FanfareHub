@@ -26,7 +26,7 @@
     <p><%= message %></p>
 <% } %>
 
-<form method="post" action="GestionFanfaron">
+<form method="post" action="Choix">
     <input type="hidden" name="action" value="saveChoixGroupesPupitres"/>
 
     <h3>Pupitres</h3>
