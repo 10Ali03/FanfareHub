@@ -1,33 +1,28 @@
 package dao;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import metier.Pupitre;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
-import metier.Pupitre;
-
 public class PupitreDAO {
-    private final DbConnectionManager dbConnectionManager;
+    private final DbConnectionManager db;
 
-    public PupitreDAO(DbConnectionManager dbManager) {
-        this.dbConnectionManager = dbManager;
+    public PupitreDAO(DbConnectionManager db) {
+        this.db = db;
     }
 
     public List<Pupitre> findAll() throws SQLException {
         String sql = "SELECT id, nom FROM pupitre ORDER BY nom";
-        List<Pupitre> pupitres = new ArrayList<>();
+        List<Pupitre> list = new ArrayList<>();
 
-        try (Connection con = dbConnectionManager.getConnection();
+        try (Connection con = db.getConnection();
              PreparedStatement ps = con.prepareStatement(sql);
              ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
-                pupitres.add(new Pupitre(rs.getInt("id"), rs.getString("nom")));
+                list.add(new Pupitre(rs.getInt("id"), rs.getString("nom")));
             }
         }
-
-        return pupitres;
+        return list;
     }
 }
