@@ -41,9 +41,9 @@ for /R "%SRC_DIR%" %%f in (*.java) do (
 )
 
 echo [2/3] Arret Tomcat...
-call "%TOMCAT_HOME%\bin\shutdown.bat"
+call "%TOMCAT_HOME%\bin\shutdown.bat" >nul 2>&1
 
-timeout /t 3 /nobreak >nul
+timeout /t 2 /nobreak >nul
 
 echo [3/3] Demarrage Tomcat...
 call "%TOMCAT_HOME%\bin\startup.bat"

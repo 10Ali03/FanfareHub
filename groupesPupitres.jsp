@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
 <%@ page import="metier.Pupitre, metier.Groupe" %>
 
@@ -20,7 +20,14 @@
     <title>Choix Groupes et Pupitres</title>
 </head>
 <body>
+    <nav>
+        <a href="menu.jsp">Menu</a> |
+        <a href="Evenement?action=list">Evenements</a> |
+        <a href="Choix?action=choixGroupesPupitres">Groupes/Pupitres</a> |
+        <a href="Auth?action=logout">Deconnexion</a>
+    </nav>
 <h1>Mes choix</h1>
+<p><a href="menu.jsp">Retour au menu</a></p>
 
 <% if (message != null) { %>
     <p><%= message %></p>
@@ -52,3 +59,4 @@
 </form>
 </body>
 </html>
+

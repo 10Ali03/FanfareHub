@@ -32,7 +32,7 @@ public class ChoixServlet extends HttpServlet {
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
     String action = req.getParameter("action");
     if (action == null || !"choixGroupesPupitres".equals(action)) {
-      res.sendError(404, "Action non supportee");
+      res.sendError(404, "Action non supportée");
       return;
     }
 
@@ -58,9 +58,10 @@ public class ChoixServlet extends HttpServlet {
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    req.setCharacterEncoding("UTF-8");
     String action = req.getParameter("action");
     if (action == null || !"saveChoixGroupesPupitres".equals(action)) {
-      res.sendError(404, "Action non supportee");
+      res.sendError(404, "Action non supportée");
       return;
     }
 
@@ -89,3 +90,4 @@ public class ChoixServlet extends HttpServlet {
     }
   }
 }
+

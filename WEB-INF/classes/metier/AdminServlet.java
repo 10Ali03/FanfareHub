@@ -28,11 +28,19 @@ public class AdminServlet extends HttpServlet {
       res.sendError(403, "Acces refuse");
       return;
     }
+    String action = req.getParameter("action");
+    if ("edit".equals(action)) {
+      String nomFanfaron = req.getParameter("nomFanfaron");
+      if (nomFanfaron != null && !nomFanfaron.isEmpty()) {
+        req.setAttribute("editingFanfaron", daoFanfaron.findByNomFanfaron(nomFanfaron));
+      }
+    }
     loadPage(req, res, null);
   }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    req.setCharacterEncoding("UTF-8");
     if (!isAdmin(req.getSession(false))) {
       res.sendError(403, "Acces refuse");
       return;
@@ -85,7 +93,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         default:
-          loadPage(req, res, "Action non supportee.");
+          loadPage(req, res, "Action non supportée.");
       }
     } catch (Exception e) {
       e.printStackTrace();
@@ -109,3 +117,4 @@ public class AdminServlet extends HttpServlet {
     }
   }
 }
+

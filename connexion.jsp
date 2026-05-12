@@ -1,4 +1,4 @@
-<%@ page contentType="text/html;charset=UTF-8" language="java" %>
+﻿<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 
 <!DOCTYPE html>
 <html lang="fr">
@@ -7,6 +7,10 @@
     <title>Connexion - FanfareHub</title>
 </head>
 <body>
+    <nav>
+        <a href="connexion.jsp">Connexion</a> |
+        <a href="inscription.jsp">Inscription</a>
+    </nav>
     <h1>Connexion à FanfareHub</h1>
     <h1>Se connecter</h1>
     <form method="post" action="Auth">
@@ -21,3 +25,5 @@
     </p>
 </body>
 </html>
+
+

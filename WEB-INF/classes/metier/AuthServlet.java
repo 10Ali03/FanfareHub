@@ -33,11 +33,12 @@ public class AuthServlet extends HttpServlet {
       res.sendRedirect("connexion.jsp");
       return;
     }
-    res.sendError(405, "Methode non autorisee");
+    res.sendError(405, "Méthode non autorisée");
   }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    req.setCharacterEncoding("UTF-8");
     String action = req.getParameter("action");
     if (action == null) {
       res.sendError(400, "Action manquante");
@@ -77,14 +78,14 @@ public class AuthServlet extends HttpServlet {
           String contraintesAlim = req.getParameter("contraintesAlim");
 
           if (mdp == null || mdpConfirm == null || !mdp.equals(mdpConfirm)) {
-            req.setAttribute("message", "Les mots de passe ne sont pas les memes !");
+            req.setAttribute("message", "Les mots de passe ne sont pas les mêmes !");
             vue = "inscription.jsp";
             break;
           }
 
           if (nomFanfaron == null || email == null || mdp == null || prenom == null
               || nom == null || genre == null || contraintesAlim == null) {
-            res.sendError(400, "Parametres manquants pour l'action creer");
+            res.sendError(400, "Paramètres manquants pour l'action créer");
             return;
           }
 
@@ -105,7 +106,7 @@ public class AuthServlet extends HttpServlet {
         }
 
         default:
-          res.sendError(404, "Action non supportee");
+          res.sendError(404, "Action non supportée");
           return;
       }
     } catch (Exception e) {
@@ -117,3 +118,4 @@ public class AuthServlet extends HttpServlet {
     req.getRequestDispatcher(vue).forward(req, res);
   }
 }
+
