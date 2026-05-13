@@ -1,0 +1,83 @@
+﻿\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{geometry}
+\usepackage{hyperref}
+\geometry{margin=2.2cm}
+
+\title{FanfareHub -- Tutoriel d'architecture (MVC/DAO)}
+\author{Projet TP9}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Objectif}
+Ce document sert de fiche de compréhension du projet Java Web (Tomcat + JSP + Servlets + DAO) pour expliquer le code à l'oral.
+
+\section{Architecture globale}
+\subsection*{Vue (JSP)}
+Pages d'affichage et formulaires:\\
+\texttt{connexion.jsp}, \texttt{inscription.jsp}, \texttt{menu.jsp}, \texttt{groupesPupitres.jsp}, \texttt{administration.jsp}, \texttt{evenements.jsp}, \texttt{evenementParticipation.jsp}.
+
+\subsection*{Contrôleurs (Servlets, package \texttt{metier})}
+\begin{itemize}
+  \item \texttt{AuthServlet}: connexion, inscription, logout
+  \item \texttt{ChoixServlet}: groupes/pupitres
+  \item \texttt{AdminServlet}: CRUD fanfarons (accès admin)
+  \item \texttt{EvenementServlet}: événements + participation
+  \item \texttt{ProfilServlet}: point d'entrée profil (minimal)
+\end{itemize}
+
+\subsection*{Modèle (package \texttt{dao} + POJO package \texttt{metier})}
+\begin{itemize}
+  \item DAO: \texttt{DbConnectionManager}, \texttt{FanfaronDAO}, \texttt{PupitreDAO}, \texttt{GroupeDAO}, \texttt{EvenementDAO}
+  \item POJO: \texttt{Fanfaron}, \texttt{Pupitre}, \texttt{Groupe}, \texttt{Evenement}, \texttt{InscriptionEvenement}
+\end{itemize}
+
+\section{Flux de requêtes importants}
+\subsection*{Connexion}
+\texttt{connexion.jsp} $\rightarrow$ \texttt{AuthServlet.doPost(action=connexion)} $\rightarrow$ \texttt{FanfaronDAO.verifIdentif(...)} $\rightarrow$ session (\texttt{login}, \texttt{role}) $\rightarrow$ \texttt{menu.jsp}.
+
+\subsection*{Groupes/Pupitres (Q2)}
+\texttt{menu.jsp} $\rightarrow$ \texttt{ChoixServlet.doGet} (chargement options + choix actuels) $\rightarrow$ \texttt{groupesPupitres.jsp}.\\
+Submit formulaire $\rightarrow$ \texttt{ChoixServlet.doPost} $\rightarrow$ \texttt{FanfaronDAO.saveChoix(...)} (transaction).
+
+\subsection*{Administration fanfarons}
+Lien visible seulement si \texttt{role=admin}.\\
+\texttt{AdminServlet} vérifie côté serveur (403 sinon), puis exécute add/update/delete via \texttt{FanfaronDAO}.
+
+\subsection*{Événements (Q4/Q5)}
+\texttt{EvenementServlet.doGet(action=list)} charge la liste.\\
+CRUD événement autorisé seulement à la commission prestation via \texttt{EvenementDAO.isCommissionPrestationMember(...)}.\\
+Participation fanfaron: \texttt{action=saveParticipation} $\rightarrow$ \texttt{EvenementDAO.replaceParticipation(...)}.
+
+\section{Mapping TP9 vers code}
+\begin{itemize}
+  \item Q2 (groupes/pupitres): \texttt{ChoixServlet} + \texttt{groupesPupitres.jsp} + \texttt{FanfaronDAO.saveChoix}
+  \item Q4 (CRUD événements): \texttt{EvenementServlet} + \texttt{EvenementDAO.create/update/delete} + \texttt{evenements.jsp}
+  \item Q5 (inscription événement): \texttt{evenementParticipation.jsp} + \texttt{EvenementServlet.saveParticipation} + \texttt{EvenementDAO.findInscriptionsByEvenement}
+\end{itemize}
+
+\section{POJO et DAO: comment ça marche}
+\subsection*{POJO}
+Un POJO est un objet Java simple (attributs + getters/setters/constructeur), sans logique SQL.
+Exemple: \texttt{Fanfaron}, \texttt{Evenement}.
+
+\subsection*{DAO}
+Un DAO contient les requêtes SQL. Il lit/écrit la base et transforme les lignes SQL en POJO.
+Exemple: \texttt{FanfaronDAO.findByNomFanfaron()} retourne un objet \texttt{Fanfaron} construit depuis \texttt{ResultSet}.
+
+\subsection*{Chaîne complète}
+Servlet (contrôleur) reçoit la requête $\rightarrow$ appelle DAO $\rightarrow$ DAO retourne POJO/listes POJO $\rightarrow$ Servlet met ça dans \texttt{request.setAttribute(...)} $\rightarrow$ JSP affiche.
+
+\section{Points d'attention pour l'oral}
+\begin{itemize}
+  \item Toujours distinguer \textbf{qui fait quoi}: JSP affiche, Servlet orchestre, DAO accède SQL.
+  \item Sécurité: cacher un lien ne suffit pas; la vérification est faite aussi côté servlet.
+  \item Transactions: utiles pour garder une base cohérente (ex: \texttt{saveChoix}).
+  \item Encodage UTF-8: important pour les accents saisis dans les formulaires.
+\end{itemize}
+
+\end{document}

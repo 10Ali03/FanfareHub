@@ -13,12 +13,16 @@ import java.io.IOException;
 public class ProfilServlet extends HttpServlet {
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    // On lit la session existante sans en creer une nouvelle.
     HttpSession session = req.getSession(false);
+    // "login" est notre marqueur d'authentification.
     String login = session == null ? null : (String) session.getAttribute("login");
+    // Si non connecte, retour vers le controleur d'authentification.
     if (login == null) {
-      res.sendRedirect("connexion.jsp");
+      res.sendRedirect("Auth?action=showLogin");
       return;
     }
+    // Si connecte, on affiche la vue menu via le controleur Profil.
     req.getRequestDispatcher("menu.jsp").forward(req, res);
   }
 }

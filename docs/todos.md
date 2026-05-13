@@ -174,3 +174,56 @@ Travaille en parallèle avec ta collègue :
 * Communication via GitHub (pull / push)
 
 ---
+## Dernieres modifications (auth, routing, securite, UX admin)
+
+### 1) Routage MVC (plus de navigation directe vers les JSP)
+- Ajout de routes GET dans `AuthServlet` :
+  - `Auth?action=showLogin` -> affiche `connexion.jsp`
+  - `Auth?action=showSignup` -> affiche `inscription.jsp`
+- Remplacement des liens directs vers `.jsp` dans les vues par des routes controleur (`Auth`, `Profil`, `Evenement`, `Choix`, `Admin`).
+- Ajout d'un point d'entree global `index.html` qui redirige vers `Auth?action=showLogin`.
+
+### 2) Controle d'acces global
+- Ajout de `AuthFilter` (filtre `/*`) :
+  - redirige vers login si l'utilisateur n'est pas authentifie.
+  - bloque l'acces direct aux JSP (oblige passage via controleur).
+  - redirige un utilisateur deja connecte vers `Profil` s'il tente de revenir sur `Auth` (hors logout).
+
+### 3) UX admin: formulaires de modification affiches a la demande
+- Les formulaires de modification ne sont plus affiches par defaut.
+- Ils s'affichent seulement apres clic sur "Modifier" (objet `editing...` present dans la requete).
+- Applique a:
+  - fanfarons
+  - pupitres
+  - groupes
+  - evenements
+
+### 4) Securite XSS
+- Ajout d'une fonction d'echappement HTML `h(...)` dans les JSP principales.
+- Echappement des valeurs dynamiques affiches dans:
+  - `administration.jsp`
+  - `evenements.jsp`
+  - `evenementParticipation.jsp`
+  - `groupesPupitres.jsp`
+  - `connexion.jsp`
+  - `inscription.jsp`
+- La variable JS de scroll admin (`sectionTarget`) est maintenant whitelistée pour eviter l'injection.
+
+### 5) Securite SQL
+- Verification: les DAO utilisent des `PreparedStatement` (pas de concatenation SQL utilisateur).
+- Pas de faille SQL injection evidente detectee sur le code audite.
+
+### 6) Inscription / connexion (coherence TP)
+- Inscription:
+  - confirmation email (`emailConfirm`)
+  - confirmation mot de passe
+  - verif unicite explicite (`nom_fanfaron`, `email`)
+  - `derniere_connexion` initialisee a `null`
+- Connexion:
+  - mise a jour de `derniere_connexion` apres succes.
+
+### 7) Evenements
+- Autorisation commission prestation rendue plus robuste (`LOWER(TRIM(nom))`).
+- Creation evenement compatible avec deux schemas:
+  - schema avec `proposer`
+  - schema avec colonne `evenement.id_fanfaron`

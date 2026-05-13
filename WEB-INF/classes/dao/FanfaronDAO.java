@@ -8,18 +8,25 @@ import java.sql.SQLException;
 import metier.Fanfaron;
 
 public class FanfaronDAO {
+    // Gestionnaire de connexion mutualise (injection au constructeur).
     private final DbConnectionManager dbConnectionManager;
 
     public FanfaronDAO(DbConnectionManager dbManager){
+        // On stocke le manager pour tous les acces SQL de cette classe.
         this.dbConnectionManager = dbManager;
     }
     
     public Fanfaron findByNomFanfaron(String nom_fanfaron){
+        // Requete parametree => pas d'injection SQL.
         String query = "SELECT * FROM fanfaron WHERE nom_fanfaron = ?";
+        // try-with-resources => fermeture auto Connection/Statement.
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
+            // Binding du parametre utilisateur.
             ps.setString(1, nom_fanfaron);
+            // Execution de la lecture.
             ResultSet rs = ps.executeQuery();
+            // Si une ligne existe, on mappe vers l'objet metier.
             if (rs.next()) {
                 return new Fanfaron(
                         rs.getString("nom_fanfaron"),
@@ -35,17 +42,22 @@ public class FanfaronDAO {
                 );
             }
         } catch (SQLException e) {
+            // Log serveur (utile en debug).
             e.printStackTrace();
         }
         
+        // Aucun resultat ou erreur => null.
         return null;
     }
 
     public boolean create(Fanfaron fanfaron){
+        // Insertion complete d'un compte fanfaron.
+        // digest(?, 'sha256') => hash mot de passe cote SQL (pgcrypto).
         String query = "INSERT INTO fanfaron (nom_fanfaron, email, mot_de_passe, prenom, nom, genre, contraintes_alimentaires, role, date_creation, derniere_connexion) VALUES (?, ?, digest(?, 'sha256'), ?, ?, ?, ?, ?, ?, ?)";
 
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
+            // Mapping des champs de l'objet metier vers la requete SQL.
             ps.setString(1, fanfaron.getNomFanfaron());
             ps.setString(2, fanfaron.getEmail());
             ps.setString(3, fanfaron.getMdp());
@@ -57,16 +69,56 @@ public class FanfaronDAO {
             ps.setTimestamp(9, fanfaron.getDateCreation());
             ps.setTimestamp(10, fanfaron.getDerniereConnexion());
         
+            // Execution de l'insertion.
             ps.executeUpdate();
 
         } catch (SQLException e) {
+            // En cas d'erreur SQL (unicite, contrainte, etc.), false.
             e.printStackTrace();
             return false;
         }
+        // Insertion reussie.
         return true;
     }
 
+    public boolean existsByNomFanfaron(String nomFanfaron) throws SQLException {
+        // Test d'existence rapide: SELECT 1.
+        String sql = "SELECT 1 FROM fanfaron WHERE nom_fanfaron = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, nomFanfaron);
+            try (ResultSet rs = ps.executeQuery()) {
+                // true si au moins une ligne.
+                return rs.next();
+            }
+        }
+    }
+
+    public boolean existsByEmail(String email) throws SQLException {
+        // Meme logique d'existence mais sur email.
+        String sql = "SELECT 1 FROM fanfaron WHERE email = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setString(1, email);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
+    }
+
+    public void updateDerniereConnexion(String nomFanfaron, java.sql.Timestamp ts) throws SQLException {
+        // Mise a jour du timestamp de derniere connexion apres login.
+        String sql = "UPDATE fanfaron SET derniere_connexion = ? WHERE nom_fanfaron = ?";
+        try (Connection con = dbConnectionManager.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)) {
+            ps.setTimestamp(1, ts);
+            ps.setString(2, nomFanfaron);
+            ps.executeUpdate();
+        }
+    }
+
     public Fanfaron verifIdentif(String nom_fanfaron, String mdp){
+        // Verification login + hash du mdp en SQL.
         String query = "SELECT * FROM fanfaron WHERE nom_fanfaron = ? AND mot_de_passe = digest(?, 'sha256')";
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
@@ -74,6 +126,7 @@ public class FanfaronDAO {
             ps.setString(2, mdp);
             ResultSet rs = ps.executeQuery();
             if (rs.next()) {
+                // Login valide => retour de l'objet fanfaron.
                 return new Fanfaron(
                         rs.getString("nom_fanfaron"),
                         rs.getString("email"),
@@ -91,10 +144,12 @@ public class FanfaronDAO {
             e.printStackTrace();
         }
         
+        // Identifiants invalides ou erreur.
         return null;
     }
 
     public int findIdByNomFanfaron(String nomFanfaron) throws SQLException {
+        // Permet de passer du login (nom_fanfaron) a l'ID technique.
         String sql = "SELECT id FROM fanfaron WHERE nom_fanfaron = ?";
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(sql)) {
@@ -103,10 +158,12 @@ public class FanfaronDAO {
                 if (rs.next()) return rs.getInt("id");
             }
         }
+        // -1 signifie "introuvable".
         return -1;
     }
 
     public java.util.List<Integer> findPupitreIdsByFanfaron(int idFanfaron) throws SQLException {
+        // Lecture des IDs de pupitres choisis par un fanfaron.
         String sql = "SELECT id_instrument FROM appartenir WHERE id_fanfaron = ?";
         java.util.List<Integer> ids = new java.util.ArrayList<>();
         try (Connection con = dbConnectionManager.getConnection();
@@ -120,6 +177,7 @@ public class FanfaronDAO {
     }
 
     public java.util.List<Integer> findGroupeIdsByFanfaron(int idFanfaron) throws SQLException {
+        // Lecture des IDs de groupes choisis par un fanfaron.
         String sql = "SELECT id_groupe FROM impliquer WHERE id_fanfaron = ?";
         java.util.List<Integer> ids = new java.util.ArrayList<>();
         try (Connection con = dbConnectionManager.getConnection();
@@ -133,23 +191,28 @@ public class FanfaronDAO {
     }
 
     public void saveChoix(int idFanfaron, String[] pupitres, String[] groupes) throws SQLException {
+        // Strategie: on remplace entierement les choix de l'utilisateur.
         String delApp = "DELETE FROM appartenir WHERE id_fanfaron = ?";
         String delImp = "DELETE FROM impliquer WHERE id_fanfaron = ?";
         String insApp = "INSERT INTO appartenir(id_fanfaron, id_instrument) VALUES (?, ?)";
         String insImp = "INSERT INTO impliquer(id_fanfaron, id_groupe) VALUES (?, ?)";
 
         try (Connection con = dbConnectionManager.getConnection()) {
+            // Transaction explicite: toutes les modifs passent ou aucune.
             con.setAutoCommit(false);
             try {
+                // Nettoyage ancien etat pupitres.
                 try (PreparedStatement ps = con.prepareStatement(delApp)) {
                     ps.setInt(1, idFanfaron);
                     ps.executeUpdate();
                 }
+                // Nettoyage ancien etat groupes.
                 try (PreparedStatement ps = con.prepareStatement(delImp)) {
                     ps.setInt(1, idFanfaron);
                     ps.executeUpdate();
                 }
 
+                // Reinsertion des pupitres selectionnes (si presents).
                 if (pupitres != null) {
                     try (PreparedStatement ps = con.prepareStatement(insApp)) {
                         for (String p : pupitres) {
@@ -161,6 +224,7 @@ public class FanfaronDAO {
                     }
                 }
 
+                // Reinsertion des groupes selectionnes (si presents).
                 if (groupes != null) {
                     try (PreparedStatement ps = con.prepareStatement(insImp)) {
                         for (String g : groupes) {
@@ -172,17 +236,21 @@ public class FanfaronDAO {
                     }
                 }
 
+                // Validation transaction.
                 con.commit();
             } catch (Exception e) {
+                // Erreur => rollback pour garantir la coherence.
                 con.rollback();
                 throw e;
             } finally {
+                // Retour au mode par defaut.
                 con.setAutoCommit(true);
             }
         }
     }
 
     public java.util.List<Fanfaron> findAllFanfarons() throws SQLException {
+        // Liste admin de tous les comptes.
         String query = "SELECT * FROM fanfaron ORDER BY nom_fanfaron";
         java.util.List<Fanfaron> fanfarons = new java.util.ArrayList<>();
         try (Connection con = dbConnectionManager.getConnection();
@@ -207,6 +275,7 @@ public class FanfaronDAO {
     }
 
     public boolean deleteByNomFanfaron(String nomFanfaron) throws SQLException {
+        // Suppression d'un compte via son nom fanfaron.
         String query = "DELETE FROM fanfaron WHERE nom_fanfaron = ?";
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
@@ -216,19 +285,24 @@ public class FanfaronDAO {
     }
 
     public boolean updateByNomFanfaron(String ancienNomFanfaron, Fanfaron fanfaron, String newMdpOrNull) throws SQLException {
+        // Update complet avec changement conditionnel du mot de passe.
         String query = "UPDATE fanfaron SET nom_fanfaron = ?, email = ?, mot_de_passe = CASE WHEN ? IS NULL OR ? = '' THEN mot_de_passe ELSE digest(?, 'sha256') END, prenom = ?, nom = ?, genre = ?, contraintes_alimentaires = ?, role = ? WHERE nom_fanfaron = ?";
         try (Connection con = dbConnectionManager.getConnection();
              PreparedStatement ps = con.prepareStatement(query)) {
+            // Nouvelles valeurs.
             ps.setString(1, fanfaron.getNomFanfaron());
             ps.setString(2, fanfaron.getEmail());
+            // Parametres pour le CASE mot de passe.
             ps.setString(3, newMdpOrNull);
             ps.setString(4, newMdpOrNull);
             ps.setString(5, newMdpOrNull);
+            // Donnees perso.
             ps.setString(6, fanfaron.getPrenom());
             ps.setString(7, fanfaron.getNom());
             ps.setString(8, fanfaron.getGenre());
             ps.setString(9, fanfaron.getContraintesAlim());
             ps.setString(10, fanfaron.getRole());
+            // Cle de recherche (ancien nom).
             ps.setString(11, ancienNomFanfaron);
             return ps.executeUpdate() > 0;
         }

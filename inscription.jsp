@@ -1,5 +1,14 @@
-﻿<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
-
+<%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
+<%!
+    private static String h(String s) {
+        if (s == null) return "";
+        return s.replace("&", "&amp;")
+                .replace("<", "&lt;")
+                .replace(">", "&gt;")
+                .replace("\"", "&quot;")
+                .replace("'", "&#x27;");
+    }
+%>
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -8,15 +17,16 @@
 </head>
 <body>
     <nav>
-        <a href="connexion.jsp">Connexion</a> |
-        <a href="inscription.jsp">Inscription</a>
+        <a href="Auth?action=showLogin">Connexion</a> |
+        <a href="Auth?action=showSignup">Inscription</a>
     </nav>
-    <p><%= request.getAttribute("message") != null ? request.getAttribute("message") : " "%> </p>
+    <p><%= request.getAttribute("message") != null ? h((String) request.getAttribute("message")) : " " %> </p>
     <h1>S'inscrire</h1>
     <form method="post" action="Auth">
         <input type='hidden' name='action' value='inscription'>
-        Nom fanfaron : <input type="text" name="nomFanfaron" value='<%= request.getParameter("nomFanfaron") != null ? request.getParameter("nomFanfaron") : "" %>' required><br><br>
-        email : <input type="email" name="email" required><br><br>
+        Nom fanfaron : <input type="text" name="nomFanfaron" value='<%= request.getParameter("nomFanfaron") != null ? h(request.getParameter("nomFanfaron")) : "" %>' required><br><br>
+        email : <input type="email" name="email" value='<%= request.getParameter("email") != null ? h(request.getParameter("email")) : "" %>' required><br><br>
+        confirmez votre email : <input type="email" name="emailConfirm" value='<%= request.getParameter("emailConfirm") != null ? h(request.getParameter("emailConfirm")) : "" %>' required><br><br>
         mot de passe : <input type="password" name="mdp" required><br><br>
         confirmez votre mot de passe : <input type="password" name="mdpConfirm" required><br><br>
         prenom : <input type="text" name="prenom" required><br><br>
@@ -37,11 +47,9 @@
         <input type="submit" value="Valider">
     </form>
     <p>
-        Déjà inscrit ?
-        <a href="connexion.jsp">Se connecter</a>
+        Deja inscrit ?
+        <a href="Auth?action=showLogin">Se connecter</a>
     </p>
 
 </body>
 </html>
-
-
