@@ -90,4 +90,19 @@ public class PupitreDAO {
             }
         }
     }
+
+    public List<Pupitre> findByFanfaron(int fanfaronId) throws SQLException {
+        String sql = "SELECT id, nom FROM pupitre p INNER JOIN appartenir a ON p.id = a.id_instrument WHERE a.id_fanfaron = ?";
+        List<Pupitre> list = new ArrayList<>();
+        
+        try (Connection con = db.getConnection();
+             PreparedStatement ps = con.prepareStatement(sql)){
+             ps.setInt(1, fanfaronId);
+             ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                list.add(new Pupitre(rs.getInt("id"), rs.getString("nom")));
+            }
+        }
+        return list;
+    }
 }

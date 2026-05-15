@@ -9,9 +9,9 @@ import java.sql.SQLException;
  * Classe singleton sur la source de données
  */
 public class DbConnectionManager{
-  private static final String URL = "jdbc:postgresql://localhost:5432/fanfarehub;";
-  private static final String USER = "postgres";
-  private static final String PASSWORD = "postgres";
+  private static final String URL = "jdbc:postgresql://localhost:5432/webdb";
+  private static final String USER = "web_user";
+  private static final String PASSWORD = "motdepasse";
   private static DbConnectionManager instance;// Singleton de DbConnectionManager
   private DbConnectionManager(){// Constructeur privé pour empêcher l'instanciation directe
     try{// Charger le driver PostgreSQL

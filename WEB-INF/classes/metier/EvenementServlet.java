@@ -62,7 +62,7 @@ public class EvenementServlet extends HttpServlet {
                 // Charge les donnees du detail evenement.
                 req.setAttribute("evenement", evenementDAO.findById(idEvenement));
                 // Charge la liste des pupitres selectionnables.
-                req.setAttribute("pupitres", pupitreDAO.findAll());
+                req.setAttribute("pupitres", pupitreDAO.findByFanfaron(idFanfaron));
                 // Charge instrument deja choisi par l'utilisateur.
                 req.setAttribute("myInstrumentId", evenementDAO.findMyInstrumentForEvent(idFanfaron, idEvenement));
                 // Charge statut deja choisi par l'utilisateur.
