@@ -1,6 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
-<%@ page import="metier.Evenement, metier.Pupitre, metier.InscriptionEvenement" %>
+<%@ page import="metier.Evenement, metier.Pupitre, metier.Participer" %>
 <%!
     // Echapement HTML centralise pour eviter les XSS dans les sorties JSP.
     private static String h(String s) {
@@ -18,7 +18,7 @@
     List<Pupitre> pupitres = (List<Pupitre>) request.getAttribute("pupitres");
     Integer myInstrumentId = (Integer) request.getAttribute("myInstrumentId");
     String myStatut = (String) request.getAttribute("myStatut");
-    List<InscriptionEvenement> inscriptions = (List<InscriptionEvenement>) request.getAttribute("inscriptions");
+    List<Participer> inscriptions = (List<Participer>) request.getAttribute("inscriptions");
 %>
 <!DOCTYPE html>
 <html lang="fr">
@@ -72,10 +72,10 @@
             <th>Fanfaron</th>
             <th>Statut</th>
         </tr>
-        <% if (inscriptions != null) for (InscriptionEvenement ins : inscriptions) { %>
+        <% if (inscriptions != null) for (Participer ins : inscriptions) { %>
         <tr>
-            <td><%= h(ins.getPupitre()) %></td>
-            <td><%= h(ins.getNomFanfaron()) %></td>
+            <td><%= ins.getInstrumentId() %></td>
+            <td><%= ins.getFanfaronId() %></td>
             <!-- Couleur visuelle du statut pour lecture rapide -->
             <td style="<%= "present".equals(ins.getStatut()) ? "color:green;" : ("absent".equals(ins.getStatut()) ? "color:red;" : "color:orange;") %>">
                 <%= h(ins.getStatut()) %>

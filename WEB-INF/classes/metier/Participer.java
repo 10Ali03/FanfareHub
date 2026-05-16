@@ -1,28 +1,34 @@
 package metier;
 
-public class InscriptionEvenement {
+public class Participer {
     // Nom du fanfaron participant (donnee de presentation).
-    private String nomFanfaron;
+    private int fanfaronId;
+    private int evenementId;
     // Nom du pupitre choisi pour cet evenement.
-    private String pupitre;
+    private int instrumentId;
     // Statut de participation: present / incertain / absent.
     private String statut;
 
-    public InscriptionEvenement(String nomFanfaron, String pupitre, String statut) {
+    public Participer(int fanfaronId, int evenementId, int instrumentId, String statut) {
         // Objet DTO (Data Transfer Object) construit depuis les requetes SQL.
-        this.nomFanfaron = nomFanfaron;
-        this.pupitre = pupitre;
+        this.fanfaronId = fanfaronId;
+        this.evenementId = evenementId;
+        this.instrumentId = instrumentId;
         this.statut = statut;
     }
 
     // Getter affiche dans la colonne "Fanfaron" de la JSP.
-    public String getNomFanfaron() {
-        return nomFanfaron;
+    public int getFanfaronId() {
+        return fanfaronId;
+    }
+
+    public int getEvenementId() {
+        return evenementId;
     }
 
     // Getter affiche dans la colonne "Instrument" de la JSP.
-    public String getPupitre() {
-        return pupitre;
+    public int getInstrumentId() {
+        return instrumentId;
     }
 
     // Getter affiche dans la colonne "Statut" et pour la couleur CSS.
