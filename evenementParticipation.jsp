@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ page import="java.util.List" %>
+<%@ page import="java.util.HashMap" %>
 <%@ page import="metier.Evenement, metier.Pupitre, metier.Participer" %>
 <%!
     // Echapement HTML centralise pour eviter les XSS dans les sorties JSP.
@@ -18,7 +19,7 @@
     List<Pupitre> pupitres = (List<Pupitre>) request.getAttribute("pupitres");
     Integer myInstrumentId = (Integer) request.getAttribute("myInstrumentId");
     String myStatut = (String) request.getAttribute("myStatut");
-    List<Participer> inscriptions = (List<Participer>) request.getAttribute("inscriptions");
+    List<HashMap<String, Object>> inscriptions = (List<HashMap<String, Object>>) request.getAttribute("inscriptions");
 %>
 <!DOCTYPE html>
 <html lang="fr">
@@ -72,10 +73,18 @@
             <th>Fanfaron</th>
             <th>Statut</th>
         </tr>
-        <% if (inscriptions != null) for (Participer ins : inscriptions) { %>
+        <% if (inscriptions != null) for (HashMap<String, Object> item : inscriptions) {
+
+       Participer ins = (Participer) item.get("participer");
+
+       String nomFanfaron =
+           (String) item.get("nomFanfaron");
+
+       String nomPupitre =
+           (String) item.get("nomPupitre");  %>
         <tr>
-            <td><%= ins.getInstrumentId() %></td>
-            <td><%= ins.getFanfaronId() %></td>
+            <td><%=  h(nomPupitre) %></td>
+            <td><%=  h(nomFanfaron) %></td>
             <!-- Couleur visuelle du statut pour lecture rapide -->
             <td style="<%= "present".equals(ins.getStatut()) ? "color:green;" : ("absent".equals(ins.getStatut()) ? "color:red;" : "color:orange;") %>">
                 <%= h(ins.getStatut()) %>
