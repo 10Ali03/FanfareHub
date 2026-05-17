@@ -4,6 +4,7 @@ import dao.DbConnectionManager;
 import dao.EvenementDAO;
 import dao.FanfaronDAO;
 import dao.PupitreDAO;
+import dao.ParticiperDAO;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
@@ -22,6 +23,7 @@ public class EvenementServlet extends HttpServlet {
     private EvenementDAO evenementDAO;
     // DAO de reference pupitres pour les inscriptions evenement.
     private PupitreDAO pupitreDAO;
+    private ParticiperDAO participerDAO;
 
     @Override
     public void init() {
@@ -31,6 +33,7 @@ public class EvenementServlet extends HttpServlet {
         fanfaronDAO = new FanfaronDAO(db);
         evenementDAO = new EvenementDAO(db);
         pupitreDAO = new PupitreDAO(db);
+        participerDAO = new ParticiperDAO(db);
     }
 
     @Override
@@ -68,7 +71,7 @@ public class EvenementServlet extends HttpServlet {
                 // Charge statut deja choisi par l'utilisateur.
                 req.setAttribute("myStatut", evenementDAO.findMyStatutForEvent(idFanfaron, idEvenement));
                 // Charge la liste complete des inscriptions pour affichage.
-                req.setAttribute("inscriptions", evenementDAO.findInscriptionsByEvenement(idEvenement));
+                req.setAttribute("inscriptions", participerDAO.findInscriptionsByEvenement(idEvenement));
                 // Rendu de la JSP detail.
                 req.getRequestDispatcher("evenementParticipation.jsp").forward(req, res);
                 return;
