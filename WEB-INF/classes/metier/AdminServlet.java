@@ -18,13 +18,18 @@ import dao.PupitreDAO;
 
 @WebServlet("/Admin")
 public class AdminServlet extends HttpServlet {
+  // DAO de gestion des comptes fanfaron.
   private FanfaronDAO daoFanfaron;
+  // DAO de reference/CRUD pupitres.
   private PupitreDAO pupitreDAO;
+  // DAO de reference/CRUD groupes.
   private GroupeDAO groupeDAO;
+  // DAO de gestion des evenements.
   private EvenementDAO evenementDAO;
 
   @Override
   public void init() {
+    // Initialisation unique des DAO avec le gestionnaire de connexion partage.
     DbConnectionManager dbManager = DbConnectionManager.getInstance();
     daoFanfaron = new FanfaronDAO(dbManager);
     pupitreDAO = new PupitreDAO(dbManager);
@@ -34,10 +39,12 @@ public class AdminServlet extends HttpServlet {
 
   @Override
   protected void doGet(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    // Protection serveur: toute route /Admin exige role admin.
     if (!isAdmin(req.getSession(false))) {
       res.sendError(403, "Acces refuse");
       return;
     }
+    // En GET, on pilote surtout le mode "edition" (pre-remplissage formulaire).
     String action = req.getParameter("action");
     try {
       if ("edit".equals(action)) {
@@ -58,12 +65,15 @@ public class AdminServlet extends HttpServlet {
     } catch (Exception e) {
       throw new ServletException(e);
     }
+    // Recharge la page d'administration complete.
     loadPage(req, res, null);
   }
 
   @Override
   protected void doPost(HttpServletRequest req, HttpServletResponse res) throws ServletException, IOException {
+    // Encodage UTF-8 pour les donnees de formulaires.
     req.setCharacterEncoding("UTF-8");
+    // Protection serveur: ecriture reservee aux admins.
     if (!isAdmin(req.getSession(false))) {
       res.sendError(403, "Acces refuse");
       return;
@@ -76,8 +86,10 @@ public class AdminServlet extends HttpServlet {
     }
 
     try {
+      // Un seul endpoint /Admin, dispatch metier selon le parametre action.
       switch (action) {
         case "add": {
+          // Creation d'un fanfaron depuis le formulaire admin.
           String nomFanfaron = req.getParameter("nomFanfaron");
           String email = req.getParameter("email");
           String mdp = req.getParameter("mdp");
@@ -94,6 +106,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "update": {
+          // Modification d'un fanfaron (ancien nom = cle de recherche).
           String ancienNom = req.getParameter("ancienNomFanfaron");
           String nomFanfaron = req.getParameter("nomFanfaron");
           String email = req.getParameter("email");
@@ -110,12 +123,14 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "delete": {
+          // Suppression d'un fanfaron.
           String nomFanfaron = req.getParameter("nomFanfaron");
           boolean ok = daoFanfaron.deleteByNomFanfaron(nomFanfaron);
           loadPage(req, res, ok ? "Fanfaron supprime." : "Echec de la suppression.");
           return;
         }
         case "addPupitre": {
+          // Creation d'un pupitre avec validation minimale.
           String nom = trimToNull(req.getParameter("nomPupitre"));
           if (nom == null) {
             loadPage(req, res, "Nom du pupitre obligatoire.");
@@ -126,6 +141,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "updatePupitre": {
+          // Mise a jour d'un pupitre.
           int id = parseInt(req.getParameter("idPupitre"));
           String nom = trimToNull(req.getParameter("nomPupitre"));
           if (id <= 0 || nom == null) {
@@ -137,12 +153,14 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "deletePupitre": {
+          // Suppression d'un pupitre (le DAO gere les dependances relationnelles).
           int id = parseInt(req.getParameter("idPupitre"));
           boolean ok = id > 0 && pupitreDAO.delete(id);
           loadPage(req, res, ok ? "Pupitre supprime." : "Echec de la suppression du pupitre.");
           return;
         }
         case "addGroupe": {
+          // Creation d'un groupe.
           String nom = trimToNull(req.getParameter("nomGroupe"));
           if (nom == null) {
             loadPage(req, res, "Nom du groupe obligatoire.");
@@ -153,6 +171,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "updateGroupe": {
+          // Mise a jour d'un groupe.
           int id = parseInt(req.getParameter("idGroupe"));
           String nom = trimToNull(req.getParameter("nomGroupe"));
           if (id <= 0 || nom == null) {
@@ -164,12 +183,14 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "deleteGroupe": {
+          // Suppression d'un groupe.
           int id = parseInt(req.getParameter("idGroupe"));
           boolean ok = id > 0 && groupeDAO.delete(id);
           loadPage(req, res, ok ? "Groupe supprime." : "Echec de la suppression du groupe.");
           return;
         }
         case "addEvenement": {
+          // Creation d'evenement et rattachement du proposeur courant.
           Evenement e = readEvenementFromRequest(req, 0);
           String login = (String) req.getSession(false).getAttribute("login");
           int idProposer = daoFanfaron.findIdByNomFanfaron(login);
@@ -178,6 +199,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "updateEvenement": {
+          // Mise a jour d'evenement.
           int id = parseInt(req.getParameter("idEvenement"));
           if (id <= 0) {
             loadPage(req, res, "ID evenement invalide.");
@@ -189,6 +211,7 @@ public class AdminServlet extends HttpServlet {
           return;
         }
         case "deleteEvenement": {
+          // Suppression d'evenement.
           int id = parseInt(req.getParameter("idEvenement"));
           boolean ok = id > 0 && evenementDAO.delete(id);
           loadPage(req, res, ok ? "Evenement supprime." : "Echec de la suppression de l'evenement.");
@@ -204,6 +227,7 @@ public class AdminServlet extends HttpServlet {
   }
 
   private Evenement readEvenementFromRequest(HttpServletRequest req, int id) {
+    // Mapping formulaire -> objet metier Evenement.
     String nom = req.getParameter("nomEvenement");
     String horodatage = req.getParameter("horodatageEvenement");
     int duree = parseInt(req.getParameter("dureeEvenement"));
@@ -214,6 +238,7 @@ public class AdminServlet extends HttpServlet {
   }
 
   private boolean isAdmin(HttpSession session) {
+    // Verifie le role stocke en session.
     if (session == null) return false;
     Object role = session.getAttribute("role");
     return role != null && "admin".equals(role.toString());
@@ -221,6 +246,7 @@ public class AdminServlet extends HttpServlet {
 
   private void loadPage(HttpServletRequest req, HttpServletResponse res, String message) throws ServletException, IOException {
     try {
+      // Recharge toutes les donnees affichees dans administration.jsp.
       req.setAttribute("fanfarons", daoFanfaron.findAllFanfarons());
       req.setAttribute("pupitres", pupitreDAO.findAll());
       req.setAttribute("groupes", groupeDAO.findAll());
@@ -233,6 +259,7 @@ public class AdminServlet extends HttpServlet {
   }
 
   private int parseInt(String value) {
+    // Parsing defensif: renvoie -1 si valeur absente/invalide.
     try {
       return Integer.parseInt(value);
     } catch (Exception e) {
@@ -241,6 +268,7 @@ public class AdminServlet extends HttpServlet {
   }
 
   private String trimToNull(String value) {
+    // Normalise une saisie texte vide vers null.
     if (value == null) return null;
     String trimmed = value.trim();
     return trimmed.isEmpty() ? null : trimmed;

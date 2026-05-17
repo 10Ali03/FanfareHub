@@ -2,6 +2,7 @@
 <%@ page import="java.util.List" %>
 <%@ page import="metier.Evenement" %>
 <%! 
+    // Echapement HTML pour afficher du texte utilisateur sans injection.
     private static String h(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;")
@@ -12,8 +13,10 @@
     }
 %>
 <%
+    // Donnees injectees par EvenementServlet.
     List<Evenement> evenements = (List<Evenement>) request.getAttribute("evenements");
     Evenement editing = (Evenement) request.getAttribute("editingEvenement");
+    // Flag d'autorisation (commission prestation).
     Boolean canManage = (Boolean) request.getAttribute("canManage");
     if (canManage == null) canManage = false;
 %>
@@ -42,6 +45,7 @@
             <th>Description</th>
             <th>Actions</th>
         </tr>
+        <!-- Listing principal des evenements -->
         <% if (evenements != null) for (Evenement e : evenements) { %>
         <tr>
             <td><%= h(e.getNom()) %></td>
@@ -51,6 +55,7 @@
             <td><%= e.getDescription() == null ? "" : h(e.getDescription()) %></td>
             <td>
                 <a href="Evenement?action=participation&id=<%= e.getId() %>">Voir / m'inscrire</a>
+                <!-- Actions de gestion visibles uniquement si autorise -->
                 <% if (canManage) { %>
                 | <a href="Evenement?action=edit&id=<%= e.getId() %>">Modifier</a>
                 | <form method="post" action="Evenement" style="display:inline;" onsubmit="return confirm('Supprimer cet evenement ?');">
@@ -65,6 +70,7 @@
     </table>
 
     <% if (canManage) { %>
+    <!-- Formulaire de creation reserve aux utilisateurs autorises -->
     <h2>Ajouter un evenement</h2>
     <form method="post" action="Evenement">
         <input type="hidden" name="action" value="add">
@@ -77,6 +83,7 @@
     </form>
 
     <% if (editing != null) { %>
+    <!-- Formulaire d'edition affiche apres un clic sur action=edit -->
     <h2>Modifier un evenement</h2>
     <form method="post" action="Evenement">
         <input type="hidden" name="action" value="update">

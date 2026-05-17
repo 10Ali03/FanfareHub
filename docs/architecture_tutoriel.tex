@@ -25,9 +25,16 @@ Pages d'affichage et formulaires:\\
 \begin{itemize}
   \item \texttt{AuthServlet}: connexion, inscription, logout
   \item \texttt{ChoixServlet}: groupes/pupitres
-  \item \texttt{AdminServlet}: CRUD fanfarons (accès admin)
+  \item \texttt{AdminServlet}: CRUD fanfarons + pupitres + groupes + événements (accès admin)
   \item \texttt{EvenementServlet}: événements + participation
   \item \texttt{ProfilServlet}: point d'entrée profil (minimal)
+\end{itemize}
+\subsection*{Filtre de sécurité (package \texttt{metier})}
+\begin{itemize}
+  \item \texttt{AuthFilter} (\texttt{@WebFilter("/*")}): protège toutes les routes.
+  \item Bloque l'accès direct aux \texttt{.jsp} et force le passage par les servlets.
+  \item Si non authentifié: autorise seulement \texttt{/Auth} et les ressources publiques (\texttt{css/js/images}).
+  \item Si authentifié: empêche le retour sur login/signup (sauf \texttt{action=logout}).
 \end{itemize}
 
 \subsection*{Modèle (package \texttt{dao} + POJO package \texttt{metier})}
@@ -38,7 +45,7 @@ Pages d'affichage et formulaires:\\
 
 \section{Flux de requêtes importants}
 \subsection*{Connexion}
-\texttt{connexion.jsp} $\rightarrow$ \texttt{AuthServlet.doPost(action=connexion)} $\rightarrow$ \texttt{FanfaronDAO.verifIdentif(...)} $\rightarrow$ session (\texttt{login}, \texttt{role}) $\rightarrow$ \texttt{menu.jsp}.
+\texttt{Auth?action=showLogin} $\rightarrow$ \texttt{connexion.jsp} $\rightarrow$ \texttt{AuthServlet.doPost(action=connexion)} $\rightarrow$ \texttt{FanfaronDAO.verifIdentif(...)} $\rightarrow$ session (\texttt{login}, \texttt{role}) $\rightarrow$ \texttt{sendRedirect("Profil")}.
 
 \subsection*{Groupes/Pupitres (Q2)}
 \texttt{menu.jsp} $\rightarrow$ \texttt{ChoixServlet.doGet} (chargement options + choix actuels) $\rightarrow$ \texttt{groupesPupitres.jsp}.\\
@@ -46,7 +53,8 @@ Submit formulaire $\rightarrow$ \texttt{ChoixServlet.doPost} $\rightarrow$ \text
 
 \subsection*{Administration fanfarons}
 Lien visible seulement si \texttt{role=admin}.\\
-\texttt{AdminServlet} vérifie côté serveur (403 sinon), puis exécute add/update/delete via \texttt{FanfaronDAO}.
+\texttt{AdminServlet} vérifie côté serveur (403 sinon), puis exécute les CRUD:
+\texttt{FanfaronDAO}, \texttt{PupitreDAO}, \texttt{GroupeDAO}, \texttt{EvenementDAO}.
 
 \subsection*{Événements (Q4/Q5)}
 \texttt{EvenementServlet.doGet(action=list)} charge la liste.\\
@@ -75,9 +83,136 @@ Servlet (contrôleur) reçoit la requête $\rightarrow$ appelle DAO $\rightarrow
 \section{Points d'attention pour l'oral}
 \begin{itemize}
   \item Toujours distinguer \textbf{qui fait quoi}: JSP affiche, Servlet orchestre, DAO accède SQL.
-  \item Sécurité: cacher un lien ne suffit pas; la vérification est faite aussi côté servlet.
+  \item Sécurité: cacher un lien ne suffit pas; la vérification est faite côté servlet \textbf{et} dans \texttt{AuthFilter}.
   \item Transactions: utiles pour garder une base cohérente (ex: \texttt{saveChoix}).
   \item Encodage UTF-8: important pour les accents saisis dans les formulaires.
 \end{itemize}
+
+\section{Résumé des classes et leur but}
+\begin{itemize}
+  \item \texttt{AuthFilter}: garde-barrière global des accès HTTP, redirections selon état de session.
+  \item \texttt{AuthServlet}: gère login/signup/logout, crée et invalide la session.
+  \item \texttt{ChoixServlet}: affiche et enregistre les choix groupes/pupitres de l'utilisateur connecté.
+  \item \texttt{AdminServlet}: panneau admin central pour CRUD fanfarons/pupitres/groupes/événements.
+  \item \texttt{Pupitre}: POJO simple (id, nom) pour transporter les données pupitre vers JSP/DAO.
+  \item \texttt{DbConnectionManager}: singleton qui centralise l'accès JDBC à la base.
+  \item \texttt{FanfaronDAO}: accès SQL fanfaron (auth, profil, choix, mapping id/login).
+  \item \texttt{PupitreDAO}: accès SQL CRUD/listage des pupitres.
+  \item \texttt{GroupeDAO}: accès SQL CRUD/listage des groupes.
+  \item \texttt{EvenementDAO}: accès SQL CRUD événements + inscriptions + contrôles de commission.
+\end{itemize}
+
+\section{Fiche des commandes techniques Servlet}
+\begin{itemize}
+  \item \texttt{res.sendRedirect("URL")}: redirection HTTP 302 vers une autre route (nouvelle requête client).
+  \item \texttt{req.getRequestDispatcher("vue.jsp").forward(req, res)}: transfert interne serveur vers JSP (même requête).
+  \item \texttt{res.sendError(code, "message")}: renvoie une erreur HTTP (ex: 400, 403, 404, 500).
+  \item \texttt{req.setAttribute("cle", valeur)}: passe des données à la vue pour le \texttt{forward}.
+  \item \texttt{req.getParameter("nom")}: lit un champ simple du formulaire/query.
+  \item \texttt{req.getParameterValues("nom")}: lit plusieurs valeurs (checkbox multiples).
+  \item \texttt{req.setCharacterEncoding("UTF-8")}: force l'encodage des paramètres entrants.
+  \item \texttt{req.getSession(false)}: récupère la session sans en créer.
+  \item \texttt{req.getSession(true)}: récupère ou crée une session.
+  \item \texttt{session.setAttribute("cle", valeur)}: stocke un contexte utilisateur (login, rôle, etc.).
+  \item \texttt{session.getAttribute("cle")}: lit une valeur de session.
+  \item \texttt{session.invalidate()}: supprime la session (logout complet).
+  \item \texttt{chain.doFilter(req, res)}: laisse passer vers le prochain filtre/servlet.
+\end{itemize}
+
+\section{Methode pour expliquer une ligne aleatoire}
+Quand le prof pointe une ligne, utilise ce schema en 4 etapes:
+\begin{enumerate}
+  \item \textbf{Contexte}: dire dans quel fichier on est (JSP, Servlet, DAO, POJO, Filter).
+  \item \textbf{Role local}: dire ce que fait exactement la ligne (lecture parametre, controle acces, SQL, affichage...).
+  \item \textbf{Impact global}: dire la consequence dans le flux utilisateur (redirige, bloque, enregistre, affiche).
+  \item \textbf{Risque evite}: dire pourquoi c'est utile (securite, null check, coherence BDD, UX).
+\end{enumerate}
+
+\subsection*{Exemples d'explication rapide (1 phrase)}
+\begin{itemize}
+  \item \texttt{req.getSession(false)}: ``on lit la session sans en creer, pour eviter des sessions fantomes''.
+  \item \texttt{res.sendRedirect("Profil")}: ``on force un nouveau GET sur le controleur cible apres succes''.
+  \item \texttt{req.getRequestDispatcher(...).forward(...)}: ``on rend la JSP dans la meme requete pour garder les attributs request''.
+  \item \texttt{if (!authenticated) ...}: ``controle d'acces serveur, pas seulement cote interface''.
+  \item \texttt{dao.saveChoix(...)}: ``la servlet delegue la persistance au DAO pour separer metier et SQL''.
+  \item \texttt{selectedPupitres.contains(...)}: ``pre-cochage de l'UI a partir des choix deja en base''.
+\end{itemize}
+
+\section{Lecture guidee des fichiers cles}
+\subsection*{1) \texttt{AuthFilter.java}}
+\begin{itemize}
+  \item Calcule \texttt{path} a partir de \texttt{URI - contextPath} pour des regles robustes.
+  \item Autorise assets publics + route \texttt{/Auth} sans session.
+  \item Bloque acces direct aux \texttt{.jsp} (oblige le passage par les servlets).
+  \item Redirige vers login si non connecte, vers profil si deja connecte sur login/signup.
+\end{itemize}
+
+\subsection*{2) \texttt{AuthServlet.java}}
+\begin{itemize}
+  \item \texttt{doGet}: affiche login/signup et gere logout.
+  \item \texttt{doPost(action=connexion)}: verifie identifiants via DAO, puis pose \texttt{login}/\texttt{role} en session.
+  \item \texttt{doPost(action=inscription)}: valide formulaires (email/mdp confirmes, unicite) puis cree fanfaron.
+  \item Sur succes, redirige vers \texttt{Profil}; sur echec, forward vers JSP avec message.
+\end{itemize}
+
+\subsection*{3) \texttt{ChoixServlet.java} + \texttt{groupesPupitres.jsp}}
+\begin{itemize}
+  \item \texttt{doGet}: charge listes pupitres/groupes + selections actuelles.
+  \item \texttt{doPost}: enregistre les IDs coches puis recharge la page.
+  \item JSP: checkboxes \texttt{name="pupitres"} / \texttt{name="groupes"} envoient des tableaux.
+  \item Les libelles sont affiches a l'utilisateur, les IDs sont stockes techniquement.
+\end{itemize}
+
+\subsection*{4) \texttt{EvenementServlet.java} + \texttt{evenements.jsp}}
+\begin{itemize}
+  \item Liste des evenements accessible aux connectes.
+  \item \texttt{canManage} active les boutons CRUD selon autorisation metier.
+  \item Participation par evenement: lien vers page detail + inscription.
+\end{itemize}
+
+\subsection*{5) \texttt{AdminServlet.java}}
+\begin{itemize}
+  \item Point unique d'administration, protege par \texttt{role=admin}.
+  \item CRUD fanfarons, pupitres, groupes, evenements.
+  \item Charge toutes les listes a la fin pour re-render \texttt{administration.jsp}.
+\end{itemize}
+
+\subsection*{6) DAO et POJO}
+\begin{itemize}
+  \item DAO = SQL + mapping ResultSet.
+  \item POJO = objets metier simples transportes entre DAO, Servlet et JSP.
+  \item \texttt{DbConnectionManager} centralise la connexion JDBC (singleton).
+\end{itemize}
+
+\section{Questions probables du prof (et reponses courtes)}
+\begin{itemize}
+  \item \textbf{Pourquoi un Filter + verif dans les servlets ?} Defense en profondeur.
+  \item \textbf{Pourquoi redirect parfois et forward parfois ?} Redirect pour changer de route/eviter resoumission, forward pour afficher une vue avec attributs request.
+  \item \textbf{Pourquoi DAO ?} Separation des responsabilites, testabilite, maintenance SQL.
+  \item \textbf{Pourquoi stocker role/login en session ?} Etat d'authentification persistant entre requetes HTTP.
+  \item \textbf{Pourquoi IDs en base mais noms dans la vue ?} Integrite technique en BDD + lisibilite utilisateur en UI.
+  \item \textbf{Pourquoi \texttt{setCharacterEncoding("UTF-8")} ?} Preserver accents/symboles des formulaires.
+  \item \textbf{Risque si acces direct JSP autorise ?} Contournement des controles de securite/metier.
+  \item \textbf{Pourquoi null-check partout ?} Eviter exceptions et reponses 500 inutiles.
+\end{itemize}
+
+\section{Fiche reponse en 20 secondes (lignes piegeuses)}
+\begin{enumerate}
+  \item \texttt{HttpSession session = req.getSession(false);} : on recupere la session seulement si elle existe, pour eviter d'en creer une inutilement.
+  \item \texttt{session != null \&\& session.getAttribute("login") != null} : utilisateur considere connecte seulement si session + login present.
+  \item \texttt{if (path.endsWith(".jsp")) \{ ... \}} : acces direct JSP interdit pour forcer le passage par les servlets (controle securite/metier).
+  \item \texttt{res.sendRedirect("Auth?action=showLogin");} : redirection HTTP, donc nouvelle requete navigateur vers login.
+  \item \texttt{req.getRequestDispatcher(...).forward(req, res);} : transfert interne serveur, meme requete, attributs \texttt{request} conserves.
+  \item \texttt{req.setCharacterEncoding("UTF-8");} : preserve accents/caracteres speciaux envoyes par les formulaires.
+  \item \texttt{req.getParameterValues("pupitres");} : recupere toutes les valeurs cochees (tableau) pour des checkboxes multiples.
+  \item \texttt{selectedPupitres.contains(p.getId()) ? "checked" : ""} : pre-cochage de l'UI selon les choix deja en base.
+  \item \texttt{daoFanfaron.verifIdentif(...);} : la servlet delegue la verification des identifiants au DAO (separation web/SQL).
+  \item \texttt{session.setAttribute("role", f.getRole());} : stocke le role en session pour appliquer les droits sur les requetes suivantes.
+  \item \texttt{if (!isAdmin(...)) res.sendError(403,...);} : protection serveur des pages admin, independante de l'affichage des liens.
+  \item \texttt{DbConnectionManager.getInstance();} : singleton pour centraliser la configuration JDBC.
+  \item \texttt{DriverManager.getConnection(URL, USER, PASSWORD);} : ouvre une connexion PostgreSQL avec les parametres configures.
+  \item \texttt{<input type="hidden" name="action" ...>} : indique au servlet quel traitement executer sur le meme endpoint.
+  \item \texttt{if (email == null || !email.equals(emailConfirm))} : validation metier pour bloquer une inscription incoherente.
+\end{enumerate}
 
 \end{document}

@@ -1,5 +1,6 @@
 <%@ page contentType="text/html;charset=UTF-8" pageEncoding="UTF-8" language="java" %>
 <%!
+    // Echapement HTML minimal pour eviter l'injection dans les champs/erreurs reaffiches.
     private static String h(String s) {
         if (s == null) return "";
         return s.replace("&", "&amp;")
@@ -17,13 +18,17 @@
 </head>
 <body>
     <nav>
+        <!-- La navigation login/signup passe toujours par AuthServlet -->
         <a href="Auth?action=showLogin">Connexion</a> |
         <a href="Auth?action=showSignup">Inscription</a>
     </nav>
+    <!-- Message fonctionnel renvoye par AuthServlet (validation, doublon email, etc.) -->
     <p><%= request.getAttribute("message") != null ? h((String) request.getAttribute("message")) : " " %> </p>
     <h1>S'inscrire</h1>
+    <!-- Le formulaire poste vers AuthServlet qui dispatch selon action=inscription -->
     <form method="post" action="Auth">
         <input type='hidden' name='action' value='inscription'>
+        <!-- Les values remises permettent de ne pas perdre la saisie en cas d'erreur -->
         Nom fanfaron : <input type="text" name="nomFanfaron" value='<%= request.getParameter("nomFanfaron") != null ? h(request.getParameter("nomFanfaron")) : "" %>' required><br><br>
         email : <input type="email" name="email" value='<%= request.getParameter("email") != null ? h(request.getParameter("email")) : "" %>' required><br><br>
         confirmez votre email : <input type="email" name="emailConfirm" value='<%= request.getParameter("emailConfirm") != null ? h(request.getParameter("emailConfirm")) : "" %>' required><br><br>
